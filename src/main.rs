@@ -1,42 +1,61 @@
+use std::cell::RefCell;
 use std::fmt;
 use std::ops::{Add, Mul};
+use std::rc::Rc;
+
+enum Op {
+    Add,
+    Mul,
+    Sub,
+    Div,
+}
+
+type ValueRef = Rc<RefCell<Value>>;
 
 struct Value {
     data: i32,
-    parents: Option<Vec<Value>>,
+    parents: Option<Vec<ValueRef>>,
+    op: Option<Op>,
 }
 
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.data)
+        write!(f, "Value(Data: {})", self.data)
     }
 }
 
 impl Value {
-    fn new(data: i32, parents: Option<Vec<Value>>) -> Self {
-        Self { data, parents }
+    fn new(data: i32, parents: Option<Vec<ValueRef>>, op: Option<Op>) -> ValueRef {
+        Rc::new(RefCell::new(Value { data, parents, op }))
     }
 }
 
-impl Add for Value {
-    type Output = Value;
+impl Add for ValueRef {
+    type Output = ValueRef;
 
-    fn add(self, other: Value) -> Value {
-        let data = self.data + other.data;
-        Value::new(data, Some(vec![self, other]))
+    fn add(self, other: ValueRef) -> ValueRef {
+        let data = self.borrow().data + other.borrow().data;
+        Value::new(
+            data,
+            Some(Rc::new(RefCell::new(vec![self, other])), Some(Op::Add)),
+        )
     }
 }
 
 impl Mul for Value {
     type Output = Value;
     fn mul(self, other: Value) -> Value {
-        Value::new(self.data * other.data, Some(vec![self, other]))
+        Value::new(
+            self.data * other.data,
+            Some(vec![self, other]),
+            Some(Op::Mul),
+        )
     }
 }
 
 fn main() {
-    let a = Value::new(9, None);
-    let b = Value::new(10, None);
-    let d = a * b;
+    let a = Rc::new(Value::new(9, None, None));
+    let b = Rc::new(Value::new(10, None, none));
+    let d = Rc::clone(&a) * Rc::clone(&b);
     print!("{}", d);
 }
