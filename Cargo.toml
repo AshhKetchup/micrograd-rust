@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+graphviz-rust = "0.9.9"
 reqwest = "0.13.4"
 serde = "1.0.229"
 tokio = "1.53.1"
